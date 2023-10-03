@@ -1,37 +1,39 @@
 <script lang="ts">
-    export let data: PageData;
-    import type { PageData } from './$types';
-    import type { RouteData } from 'cms/types';
-    import type { DeleteRouteFunc } from 'cms/funcs';
-    import Utils from "cms/utils"
-    import MetaData from "cms/components/shared/MetaData.svelte";
-    import PageTitle from 'cms/components/shared/PageTitle.svelte';
-    import Routes from 'cms/components/shared/routes/Routes.svelte';
-    import NoResult from "cms/components/shared/NoResult.svelte"
-    import Pagination from "cms/components/shared/Pagination.svelte";
-    import { addToast } from 'cms/packages/toasts';
-    $: routes = data.routes
-
-    /** delete route */
+    import PageTitle from "svelteCMS/components/shared/PageTitle.svelte";
+    import Routes from "svelteCMS/components/routes/Routes.svelte";
+    import { page } from "$app/stores";
+    import utils from "svelteCMS/lib/utils";
+    import { createToast } from "svelteCMS/components/toasts/store";
+    import NoResult from "svelteCMS/components/shared/NoResult.svelte";
+    import type { ApiRouteDelete, RouteData } from "svelteCMS/types";
+    $: query = $page.url.searchParams.get("query")
+    $: routes = query ? $page.data.svelteCMS.routes.filter(data=>data.id.match(new RegExp(query!,"i"))) : $page.data.svelteCMS.routes
+    /** the route that currently being deleted */
+    let deletingRouteID:string = ""
+    /** Delete route when delete event is fired up */
     async function deleteRoute(e:any){
-        const route:RouteData = e.detail
-        const apiLoad:DeleteRouteFunc['input'] = { name:"deleteRoute",data:route }
-        const apiResponse:DeleteRouteFunc['output'] = await Utils.fetch("/",apiLoad)
-        // If route was deleted
-        if(apiResponse.ok){
-            const newRoutesList = routes.filter(data=>data.ID!==route.ID)
-            routes = [...newRoutesList]
-            addToast({ type:"ok",msg:apiResponse.msg })
+        const routeData:RouteData = e.detail
+        deletingRouteID = routeData.id // set route id being deleted
+        const apiLoad:ApiRouteDelete['input'] = routeData
+        const apiResponse:ApiRouteDelete['output'] = await utils.apiRequest("/admin/api/routes/delete",apiLoad)
+        // wait 500 milliseconds for better user experience
+        await utils.wait(1000)
+        // show api message
+        createToast({ type:apiResponse.error ? "error" : "successful",msg:apiResponse.message })
+        // if route was delete, remove route from current routes list
+        if(!apiResponse.error){
+            const newRoutes = routes.filter(data=>data.id!==routeData.id)
+            // set new routes list
+            routes = [...newRoutes]
         }
-        // If route was not deleted
-        else addToast({ type:"error",msg:apiResponse.msg })
+        // reset route id being deleted
+        deletingRouteID = ""
     }
 </script>
 
-<MetaData title="Routes"/>
-<PageTitle title="Routes" link={{ href:"/routes/create",text:"Create route"}}/>
-<Routes {routes} on:delete={deleteRoute}/>
+<PageTitle title="Routes" showGoBack link={{ href:"/admin/routes/create",text:"Create"}} />
 {#if routes.length===0}
-    <NoResult title="No routes founded" subTitle="Please create new route to be displayed here" hrefText="Create route" href="/routes/create"/>
+    <NoResult title="No routes" subTitle="No routes were founded" link={{ href:"/admin/routes/create",text:"Create" }}/>
+{:else}
+    <Routes {routes} {deletingRouteID} on:delete={deleteRoute}/>
 {/if}
-<Pagination baseDir="routes" itemsCount={data.count} page={data.page} itemsPerPage={data.itemsPerPage}/>

@@ -1,15 +1,18 @@
-import db from "cms/lib/db.server"
+import db from "svelteCMS/lib/db.server";
 import { error } from "@sveltejs/kit"
-import type { RequestEvent } from "./$types"
-import type { RouteData } from "cms/types"
+import type { AppCollectionNames,AppRouteData } from "svelteCMS/types"
+import type { LayoutServerLoad } from "./$types"
 
-export const load = async(event:RequestEvent)=>{
+// TODO: deal with mongodb
+export const load:LayoutServerLoad = async(event)=> {
     const routeID = event.params.routeID
-    const routesCol = db.collection("_routes")
-    // check if route exists
-    const routeData:RouteData|null = await routesCol.findOne({ ID:routeID }) as any
-    if(!routeData) throw error(404,{ message:`Route ${routeID} do not exists`})
+    const appColName:AppCollectionNames = "_App"
+    const appCol = db.collection(appColName)
+    // find route data inside app collection
+    const appRouteData = await appCol.findOne({ key:"collection","data.id":routeID}) as AppRouteData|null
+    // if route does not exists
+    if(!appRouteData) throw error(404,`Route '${routeID}' not founded`)
     // else return route data
-    routeData['_id'] = routeData['_id'].toString()
-    return { routeData }
+    const routeData:AppRouteData['data'] = {...appRouteData.data} 
+    return { routeData }   
 }

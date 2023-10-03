@@ -1,5 +1,5 @@
 <script lang="ts">
-    import engineSrc from "client/static/engine.png"
+    import engineSrc from "client/assets/engine.png"
 </script>
 
 <div class="home">
@@ -20,31 +20,31 @@
     .home{
         display: flex;
         align-items: center;
-        margin: 60px 0px;
+        padding: 30px 0px;
     }
     .left{
-        flex: 2;
+        flex: 2.5;
         margin-right: 20px;
         h2,h3,p{ text-shadow: 1px 1px 3px rgba(0,0,0,.1);}
         h2{
             font-size: 60px;
             font-weight: 800;
             text-transform: uppercase;
-            color: var(--headerColor);
-            span{ color: var(--mainColor);}
+            color: var(--header-color);
+            span{ color: var(--main-color);}
         }
         h3{
             font-size: 30px;
             font-weight: 400;
             text-transform: capitalize;
-            color: var(--textColor);
+            color: var(--text-color);
             margin-bottom: 10px;
         }
         p{
             font-size: 15px;
             font-weight: 200;
             text-transform: capitalize;
-            color: var(--textColor);
+            color: var(--text-color);
         }
     }
     .buttons{
@@ -52,12 +52,13 @@
         align-items: center;
     }
     .button{
+        text-decoration: none;
         padding: 10px 20px;
-        border-radius: 20px;
+        border-radius: 5px;
         font-size: 14px;
-        font-weight: 300;
-        color: var(--buttonColor);
-        background-color: var(--buttonBg);
+        font-weight: 600;
+        color: var(--button-color);
+        background-color: var(--button-bg);
         margin-top: 20px;
         margin-right: 10px;
         box-shadow: 1px 1px 4px rgba(0,0,0,.1);

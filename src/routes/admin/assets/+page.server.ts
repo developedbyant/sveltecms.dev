@@ -1,21 +1,16 @@
-import db from "cms/lib/db.server"
-import { ObjectId } from "mongodb"
-import type { RequestEvent } from "@sveltejs/kit"
-import type { AssetData } from "cms/types"
+import db from 'svelteCMS/lib/db.server';
+import type { AssetData } from 'svelteCMS/types';
+import type { PageServerLoad } from './$types';
 
-export const load = async(event:RequestEvent)=> {
-    const searchQuery = event.url.searchParams.get("q") 
-    const filter:{[key:string]:any} = { _id:{$ne: new ObjectId("000000000000000000000000") } }
-    // Add query if founded
-    if(searchQuery){ filter["title"] = new RegExp(searchQuery,"ig") }
-
-    const searchPageNum = event.url.searchParams.get("page")
-    const page = searchPageNum ? Number(searchPageNum) : 1
-    const collection = db.collection("_assets")
-    const count = await collection.countDocuments(filter)
-    const itemsPerPage = event.locals.appData.config.assetsPerPage
-    const numToSkip = page<=1 ? 0 : itemsPerPage*page - itemsPerPage
-    const cursor = collection.find(filter).skip(numToSkip).limit(itemsPerPage).sort("_id","desc").map((data:any)=>{ data['_id']=data['_id'].toString() ; return data})
-    const assets = await cursor.toArray() as AssetData[]
-    return { assets,count,page,itemsPerPage }
+export const load:PageServerLoad = async(event)=> {
+    const appData = event.locals.svelteCMS.appData
+    const pageNum = Number(event.url.searchParams.get("page")) || 1
+    const skipNum = pageNum > 1 ? (pageNum * appData.assetsPerPage) - appData.assetsPerPage : 0
+    const assetsCol = db.collection("_Assets")
+    const query = event.url.searchParams.get("query")
+    const filter = query ? { title:new RegExp(query,"i")} : {}
+    const assetsCursor = assetsCol.find(filter).limit(appData.assetsPerPage?appData.assetsPerPage:6).sort("_id","desc")
+    const assets:AssetData[] = await assetsCursor.map((data:any)=>{ data['_id'] = data['_id'].toString() ; return data }).skip(skipNum).toArray()
+    // return assets 
+    return { assets }
 }

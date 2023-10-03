@@ -1,92 +1,82 @@
 <script lang="ts">
-    export let data: PageData;
-    import type { PageData } from './$types';
-    import type { AssetData } from 'cms/types';
-    import type { UpdateAssetFunc,DeleteAssetFunc } from 'cms/funcs';
-    import Utils from "cms/utils"
-    import { addToast } from 'cms/packages/toasts';
-    import MetaData from "cms/components/shared/MetaData.svelte";
-    import PageTitle from 'cms/components/shared/PageTitle.svelte';
-    import Assets from "cms/components/shared/assets/assets.svelte"
-    import AssetEditor from 'cms/components/shared/assetEditor.svelte';
-    import NoResult from "cms/components/shared/NoResult.svelte"
-    import Pagination from "cms/components/shared/Pagination.svelte";
-    import FileExplorer from 'cms/components/shared/fileExplorer/fileExplorer.svelte';
+    export let data:PageData
+    import { createToast } from "svelteCMS/components/toasts/store";
+    import utils from "svelteCMS/lib/utils";
+    import PageTitle from "svelteCMS/components/shared/PageTitle.svelte";
+    import Assets from "svelteCMS/components/assets/assets.svelte";
+    import FileSelector from "svelteCMS/components/shared/FileSelector.svelte";
+    import AssetEditor from "svelteCMS/components/shared/AssetEditor.svelte";
+    import NoResult from "svelteCMS/components/shared/NoResult.svelte";
+    import Pagination from "svelteCMS/components/shared/Pagination.svelte";
+    import type { PageData } from "./$types";
+    import type { AssetData,ApiAssetDelete, ApiAssetUpdate } from "svelteCMS/types";
     $: assets = data.assets
-    let asset:AssetData
-    let assetEditorOpen:boolean = false
+    let assetToEdit:AssetData|false = false
+    let showFileSelector = false
     let updating:boolean = false
     let deleting:boolean = false
-    let showFileExplorer:boolean = false
 
-    /** update asset using e.detail=AssetData from event*/
-    async function setAssetToUpdate(e:any) {
+    /** Handle when file selector upload new file */
+    async function handleUpload(e:any) {
         const assetData:AssetData = e.detail
-        asset = assetData
-        assetEditorOpen = true
+        // add asset to assets list
+        assets = [assetData,...assets.splice(0,assets.length-1)]
     }
 
-     /** update asset */
-     async function updateAsset() {
-        updating = true
-        const apiLoad:UpdateAssetFunc['input'] = { name:"updateAsset",data:asset }
-        const response:UpdateAssetFunc['output'] = await Utils.fetch("/",apiLoad)
-        await Utils.sleep(1000)
-        // show msg with response message
-        if(response.ok){
-            addToast({ msg:response.msg,type:"ok" })
-            // update updated asset in assets list
-            const newAssetsList = assets.map(data=>{
-                if(data.assetID===asset.assetID){
-                    data = asset
-                }
-                return data
+    /** Open asset editor asset when user click on it */
+    async function handleAssetClick(e:any) {
+        const assetData:AssetData = e.detail
+        assetToEdit = assetData
+    }
+
+    /** Update asset when user click update from asset editor */
+    async function updateAsset(e:any) {
+        updating = true // set updating
+        const assetData:AssetData = e.detail
+        const apiLoad:ApiAssetUpdate['input'] = assetData
+        const apiResponse:ApiAssetUpdate['output'] = await utils.apiRequest("/admin/api/assets/update",apiLoad)
+        // show api response message
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })
+        // wait 2 seconds
+        await utils.wait(500)
+        // if asset was updated, update from current assets list
+        if(!apiResponse.error){
+            const newAssets = assets.map(data=>{
+                if(data._id===assetData._id) return assetData
+                else return data
             })
-            assets = [...newAssetsList]
+            assets = [...newAssets]
         }
-        else addToast({ msg:response.msg,type:"error" })
-        await Utils.sleep(1000)
-        assetEditorOpen = false
-        updating = false
+        assetToEdit = false // reset assetToEdit
+        updating = false // reset updating
     }
 
-    /** delete asset */
-    async function deleteAsset() {
-        deleting = true
-        const apiLoad:DeleteAssetFunc['input'] = { name:"deleteAsset",data:asset }
-        const response:DeleteAssetFunc['output'] = await Utils.fetch("/",apiLoad)
-        // show msg with response message
-        if(response.ok){
-            await Utils.sleep(500)
-            addToast({ msg:response.msg,type:"ok" })
-            await Utils.sleep(500)
-            // remove deleted asset from assets list
-            const newAssetsList = assets.filter(data=>data.assetID!==asset.assetID)
-            assets = [...newAssetsList]
+    /** Delete asset when user confirm deletion from asset editor */
+    async function deleteAsset(e:any) {
+        deleting = true // set deleting
+        const assetData:AssetData = e.detail
+        const apiLoad:ApiAssetDelete['input'] = assetData
+        const apiResponse:ApiAssetDelete['output'] = await utils.apiRequest("/admin/api/assets/delete",apiLoad)
+        // show api response message
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })
+        // wait 2 seconds
+        await utils.wait(500)
+        // if asset was deleted, remove from current assets list
+        if(!apiResponse.error){
+            const newAssets = assets.filter(data=>data._id!==assetData._id)
+            assets = [...newAssets]
         }
-        else addToast({ msg:response.msg,type:"error" })
-        await Utils.sleep(500)
-        assetEditorOpen = false
-        deleting = false
-    }
-    /** Handle page title button click */
-    function handleTitleClick(){
-        showFileExplorer = !showFileExplorer
-    }
-
-    /** Handle asset uploaded*/
-    function handleAssetUploaded(e:any){
-        const newAsset:AssetData = e.detail
-        assets = [newAsset,...assets]
+        assetToEdit = false // reset assetToEdit
+        deleting = false // reset deleting
     }
 </script>
 
-<FileExplorer bind:open={showFileExplorer} on:assetUploaded={handleAssetUploaded}/>
-<MetaData title="Assets"/>
-<PageTitle title="Assets" btnText="Upload" on:click={handleTitleClick} on:keypress={handleTitleClick}/>
-<AssetEditor {updating} {deleting} bind:open={assetEditorOpen} bind:asset on:update={updateAsset} on:delete={deleteAsset}/>
-<Assets {assets} on:assetClick={setAssetToUpdate}/>
+<AssetEditor {updating} {deleting} bind:asset={assetToEdit} on:delete={deleteAsset} on:update={updateAsset}/>
+<FileSelector bind:open={showFileSelector} on:upload={handleUpload}/>
+<PageTitle showGoBack title="Assets" btnText="Upload" on:click={()=>showFileSelector=!showFileSelector}/>
 {#if assets.length===0}
-    <NoResult title="No assets founded" subTitle="Please create new asset to be displayed here" hrefText="Upload asset" href="/assets" on:click={()=>showFileExplorer=true}/>
+    <NoResult title="No assets" subTitle="No assets were founded" link="Upload" on:click={()=>showFileSelector=!showFileSelector}/>
+{:else}
+    <Assets {assets} on:assetClick={handleAssetClick}/>
+    <Pagination basePath="/admin/assets" morePages={assets.length>=data.svelteCMS.appData.assetsPerPage}/>
 {/if}
-<Pagination baseDir="assets" itemsCount={data.count} page={data.page} itemsPerPage={data.itemsPerPage}/>

@@ -1,3 +1,5 @@
-import cmsHook from "cms/custom/hooks.server";
+import svelteCMSHooks from "svelteCMS/lib/hooks.server"
 import { sequence } from '@sveltejs/kit/hooks';
-export const handle = sequence(cmsHook);
+import type { Handle } from '@sveltejs/kit';
+
+export const handle:Handle = sequence(svelteCMSHooks)

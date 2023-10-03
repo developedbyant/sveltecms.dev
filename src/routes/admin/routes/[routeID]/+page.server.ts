@@ -1,22 +1,16 @@
-import db from "cms/lib/db.server"
-import type { RouteObjectData } from "cms/types"
-import type { PageServerLoadEvent } from "./$types"
+import db from "svelteCMS/lib/db.server";
+import type { PageServerLoad } from './$types';
 
-export const load = async(event:PageServerLoadEvent)=>{
-    const routeData = (await event.parent()).routeData
-    const searchQuery = event.url.searchParams.get("q") 
-    const filter:{[key:string]:any} = { }
-    // Add query if founded
-    if(searchQuery){ filter[routeData.searchAbleKey] = new RegExp(searchQuery,"ig") }
-
+export const load:PageServerLoad = async(event)=> {
     const routeID = event.params.routeID
-    const searchPageNum = event.url.searchParams.get("page")
-    const page = searchPageNum ? Number(searchPageNum) : 1
-    const collection = db.collection(routeID)
-    const count = await collection.countDocuments(filter)
-    const itemsPerPage = event.locals.appData.config.objectsPerPage
-    const numToSkip = page<=1 ? 0 : itemsPerPage*page - itemsPerPage
-    const cursor = collection.find(filter).skip(numToSkip).limit(itemsPerPage).sort("_id","desc").map((data:any)=>{ data['_id']=data['_id'].toString() ; return data})
-    const objects = await cursor.toArray() as RouteObjectData[]
-    return { objects,count,page,itemsPerPage }
+    const objectsCol = db.collection(routeID)
+    const query = event.url.searchParams.get("query")
+    const filter = query ? { $or:(await event.parent()).routeData.searchAbleKeys.map(data=>{ return{[data]:new RegExp(query,"i")} }) } : {}
+    const objectsCursor = objectsCol.find(filter).limit(20)
+    const objects = await objectsCursor.map((data:any)=>{
+        data['_id'] = data['_id'].toString()
+        return data
+    }).toArray()
+    // return objects 
+    return { objects }
 }

@@ -1,46 +1,43 @@
 <script lang="ts">
-    export let data: PageData;
-    import type { PageData } from './$types';
-    import type { RouteObjectData } from 'cms/types';
-    import type { DeleteObjectFunc } from 'cms/funcs';
-    import Utils from "cms/utils"
-    import PageTitle from 'cms/components/shared/PageTitle.svelte';
-    import Objects from "cms/components/shared/objects/Objects.svelte"
-    import NoResult from "cms/components/shared/NoResult.svelte"
-    import Pagination from "cms/components/shared/Pagination.svelte";
-    import { addToast } from 'cms/packages/toasts';
+    export let data:PageData
+    import RouteObjects from "svelteCMS/components/routeObjects/RouteObjects.svelte";
+    import utils from "svelteCMS/lib/utils";
+    import { createToast } from "svelteCMS/components/toasts/store";
+    import PageTitle from "svelteCMS/components/shared/PageTitle.svelte";
+    import NoResult from "svelteCMS/components/shared/NoResult.svelte";
+    import type { PageData } from "./$types";
+    import type { ObjectData,ApiObjectDelete } from "svelteCMS/types";
     $: objects = data.objects
-    $: routeID = data.routeData.ID
-    let deleting:boolean = false
+    $: routeID = data.routeData.id
+    let deletingObjectID = ""
 
-    /** Handle delete route object */
-    async function deleteObject(e:any){
-        // set deleting stage
-        deleting = true
-        // send delete request
-        const object:RouteObjectData = e.detail
-        const apiLoad:DeleteObjectFunc['input'] = { name:"deleteObject",data:{ routeID,object } }
-        const apiResponse:DeleteObjectFunc['output'] = await Utils.fetch("/",apiLoad)
-        // Show api response message
-        // If route object was deleted
-        if(apiResponse.ok){
-            await Utils.sleep(500)
-            addToast({ type:"ok",msg:apiResponse.msg })
-            // remove deleted object from objects list
-            const newObjectsList = objects.filter(data=>data._id!==object._id)
-            objects = [...newObjectsList]
+    /** Delete route object */
+    async function deleteObject(e:any) {
+        const objectData:ObjectData = e.detail
+        // set deletingObjectID
+        deletingObjectID = objectData._id
+        // send api request
+        const apiLoad:ApiObjectDelete['input'] = { objectData,routeID:data.routeData.id }
+        const apiResponse:ApiObjectDelete['output'] = await utils.apiRequest("/admin/api/objects/delete",apiLoad)
+        // wait 500 milliseconds
+        await utils.wait(500)
+        // show api response message
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })
+        // wait 500 milliseconds
+        await utils.wait(1000)
+        // if object was delete, remove it from current list
+        if(!apiResponse.error){
+            const newObjects = objects.filter(data=>data._id!==objectData._id)
+            objects = [...newObjects]
         }
-        // If route object was not deleted
-        else addToast({ type:"error",msg:apiResponse.msg })
-        // remove deleting stage
-        await Utils.sleep(500)
-        deleting = false
+        // remove deletingObjectID
+        deletingObjectID = ""
     }
 </script>
 
-<PageTitle title={data.routeData.ID} goBackHref="/routes" link={{ href:`/routes/${routeID}/new-object`,text:"Add object" }}/>
-<Objects bind:deleting {objects} on:delete={deleteObject}/>
+<PageTitle showGoBack title={routeID} link={{ text:"Create",href:`/admin/routes/${routeID}/objects/create` }}/>
 {#if objects.length===0}
-    <NoResult title="No objects founded" subTitle="Please create new object to be displayed here" hrefText="Create object" href={`/routes/${routeID}/new-object`}/>
+    <NoResult title={`No ${routeID}`} subTitle={`No ${routeID}, please add some`} link={{ text:"Create",href:`/admin/routes/${routeID}/objects/create` }}/>
+{:else}
+    <RouteObjects routeID={data.routeData.id} {objects} {deletingObjectID} on:delete={deleteObject}/>
 {/if}
-<Pagination baseDir={`routes/${routeID}`} itemsCount={data.count} page={data.page} itemsPerPage={data.itemsPerPage}/>

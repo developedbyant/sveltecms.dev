@@ -1,15 +1,16 @@
-declare namespace App {
-	interface Locals {
-        sessionIdName: string
-        userData:import("cms/types").UserData
-        appData:import("cms/types").App
-        authID:string
-    }
-	interface PageData {
-        appData:import("cms/types").App
-        userData:import("cms/types").UserData
-        authID:string
-    }
-	// interface Error {}
-	// interface Platform {}
+// See https://kit.svelte.dev/docs/types#app
+// for information about these interfaces
+declare global {
+	namespace App {
+		// interface Error {}
+		interface Locals {
+			svelteCMS:import("svelteCMS/types/locals").Locals
+		}
+		interface PageData {
+			svelteCMS:import("svelteCMS/types/locals").PageData
+		}
+		// interface Platform {}
+	}
 }
+
+export {};

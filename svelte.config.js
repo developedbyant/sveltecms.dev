@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-node';
 import { vitePreprocess } from '@sveltejs/kit/vite';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -6,10 +6,11 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter(),
-        alias:{
-            "cms/*":"src/cms/*",
-            "client/*":"src/client/*",
-        }
+		alias:{
+			svelteCMS:"src/svelteCMS/*",
+			kitDocs:"src/kitDocs/*",
+            client:"src/client/*",
+		}
 	}
 };
 

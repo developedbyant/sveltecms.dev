@@ -1,21 +1,17 @@
-import db from "cms/lib/db.server"
-import { ObjectId } from "mongodb"
-import type { RequestEvent } from "@sveltejs/kit"
-import type { UserData } from "cms/types"
+import db from 'svelteCMS/lib/db.server';
+import type { UserData } from 'svelteCMS/types';
+import type { PageServerLoad } from './$types';
 
-export const load = async(event:RequestEvent)=> {
-    const searchQuery = event.url.searchParams.get("q") 
-    const filter:{[key:string]:any} = { _id:{$ne: new ObjectId("000000000000000000000000") } }
-    // Add query if founded
-    if(searchQuery){ filter["email"] = new RegExp(searchQuery,"ig") }
-
-    const searchPageNum = event.url.searchParams.get("page")
-    const page = searchPageNum ? Number(searchPageNum) : 1
-    const collection = db.collection("_users")
-    const count = await collection.countDocuments(filter)
-    const itemsPerPage = event.locals.appData.config.usersPerPage
-    const numToSkip = page<=1 ? 0 : itemsPerPage*page - itemsPerPage
-    const cursor = collection.find(filter).skip(numToSkip).limit(itemsPerPage).sort("_id","desc").map((data:any)=>{ data['_id']=data['_id'].toString() ; return data})
-    const users = await cursor.toArray() as UserData[]
-    return { users,count,page,itemsPerPage }
+export const load:PageServerLoad = async(event)=> {
+    const userData = event.locals.svelteCMS.userData
+    const appData = event.locals.svelteCMS.appData
+    const pageNum = Number(event.url.searchParams.get("page")) || 1
+    const skipNum = pageNum > 1 ? (pageNum * appData.usersPerPage) - appData.usersPerPage : 0
+    const usersCol = db.collection("_Users")
+    const query = event.url.searchParams.get("query")
+    const filter = query ? { $and:[{email:new RegExp(query,"i")},{email:{$ne:userData.email}}] } : { email:{$ne:userData.email} }
+    const cursor = usersCol.find(filter).limit(appData.usersPerPage?appData.usersPerPage:10).sort("_id","desc")
+    const users:UserData[] = await cursor.map((data:any)=>{ data['_id'] = data['_id'].toString() ; return data }).skip(skipNum).toArray()
+    // return users 
+    return { users }
 }

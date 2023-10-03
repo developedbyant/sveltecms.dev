@@ -1,0 +1,95 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800&display=swap");
+*{
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+.kitdocs{
+    transition: background-color ease 0.3s,color ease 0.3s;
+    /* app */
+    --app-bg:#1d2b41;
+    --anti-app-bg:#303c53;
+    --blur-bg: #ebebeb7d;
+    --header-color:#ffffff;
+    --text-color:#a1a1aa;
+    --border-color:#ffffff1a;
+    --icon-color: #eaeaea;
+    --max-width:1400px;
+    --shadow:rgba(0,0,0,5%);
+    --main-color:#38bdf8;
+    --second-color:#38bdf8;
+    --error-bg: #cc7d7d;
+    --error-color: #fff;
+    /* search */
+    --search-bg:#2f3c53;
+    --search-color:#b3b3b3;
+    /* nav */
+    --nav-bg:#000000;
+    --nav-link-color:#d8dade;
+    --nav-link-hover-color:#303b53e0;
+    /* card */
+    --card-bg:#283043;
+    --card-header-color:#ffffff;
+    --card-text-color:#a0a0a0;
+    /* data label */
+    --data-label-bg:#383838;
+    --data-label-color:#cfcfcf;
+    /* button */
+    --button-bg: #38bdf8;
+    --button-color:#fff;
+    /* code */
+    --code-bg:#181818;
+    --code-text-color:#afafaf;
+    --code-key-color:#b372a8;
+    --code-comment-color:#538b46;
+    --code-string-color:#B58672;
+    --code-func-color:#dbdba6;
+}
+.kitdocs.light{
+    --app-bg:#fff;
+    --anti-app-bg:#f5f5f5;
+}
+
+/* label data */
+[data-label]{
+    position: relative;
+}
+[data-label]:hover::before{
+    content: attr(data-label);
+    width: max-content;
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 10;
+    background-color: var(--data-label-bg);
+    color: var(--data-label-color);
+    font-size: 12px;
+    font-weight: 400;
+    border-radius: 5px;
+    padding: 7px 13px;
+    top: calc(100% + 10px);
+    left: 50%; transform: translateX(-50%);
+}
+[data-label-tr]:hover::before,[data-label-tl]:hover::before,[data-label-br]:hover::before,[data-label-bl]:hover::before{
+    transform: none;
+}
+[data-label-tr]:hover::before{
+    top: calc(-100% - 15px);
+    left: calc(100% + 5px);
+}
+[data-label-tl]:hover::before{
+    top: calc(-100% - 15px);
+    right: calc(100% + 5px);
+    left: auto;
+}
+[data-label-bl]:hover::before{
+    top: calc(100% + 5px);
+    right: calc(100% + 5px);
+    left: auto;
+}
+[data-label-br]:hover::before{
+    top: calc(100% + 5px);
+    right: auto;
+    left: calc(100% + 5px);
+}

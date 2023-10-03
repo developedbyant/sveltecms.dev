@@ -1,39 +1,36 @@
 <script lang="ts">
     export let data:PageData
-    import type { PageData } from "./$types"
-    import type { UserData } from "cms/types"
-    import type { DeleteUserFunc } from "cms/funcs"
-    import { addToast } from "cms/packages/toasts"
-    import Utils from "cms/utils"
-    import MetaData from "cms/components/shared/MetaData.svelte";
-    import Users from "cms/components/shared/users/users.svelte"
-    import PageTitle from "cms/components/shared/PageTitle.svelte"
-    import NoResult from "cms/components/shared/NoResult.svelte"
-    import Pagination from "cms/components/shared/Pagination.svelte";
+    import utils from "svelteCMS/lib/utils";
+    import { createToast } from "svelteCMS/components/toasts/store";
+    import PageTitle from "svelteCMS/components/shared/PageTitle.svelte";
+    import Users from "svelteCMS/components/users/Users.svelte";
+    import Pagination from "svelteCMS/components/shared/Pagination.svelte";
+    import NoResult from "svelteCMS/components/shared/NoResult.svelte";
+    import type { PageData } from "./$types";
+    import type { UserData,ApiUserDelete } from "svelteCMS/types";
     $: users = data.users
 
-    /** Delete user */
+    /** delete user */
     async function deleteUser(e:any) {
         const userData:UserData = e.detail
-        const apiLoad:DeleteUserFunc['input'] = { name:"deleteUser",data:userData }
-        const apiResponse:DeleteUserFunc['output'] = await Utils.fetch("/",apiLoad)
-        // if user was created
-        if(apiResponse.ok){
-            addToast({ type:"ok",msg:apiResponse.msg })
-            await Utils.sleep(1000)
-            // remove user from current lis
-            const newUsersList = users.filter(data=>data._id!==userData._id)
-            users = [...newUsersList]
+        const apiLoad:ApiUserDelete['input'] = userData
+        const apiResponse:ApiUserDelete['output'] = await utils.apiRequest("/admin/api/users/delete",apiLoad)
+        // show api response
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })
+        // wait 1 second to show message
+        await utils.wait(500)
+        // if user was deleted, remove user from current users list
+        if(!apiResponse.error){
+            const newUsers = users.filter(data=>data._id!==userData._id)
+            users = [...newUsers]
         }
-        // else if user was not created
-        else{ addToast({ type:"error",msg:apiResponse.msg }) }
     }
 </script>
 
-<MetaData title="Users"/>
-<PageTitle title="Users" link={{ href:"/users/create",text:"Create user" }}/>
-<Users {users} on:delete={deleteUser}/>
+<PageTitle showGoBack title="Users" link={{ href:"/admin/users/create",text:"Create"}}/>
 {#if users.length===0}
-    <NoResult title="No users founded" subTitle="Please create new user to be displayed here" hrefText="Create user" href="/users/create"/>
+    <NoResult title="No users" subTitle="No users were founded" link={{ text:"Create one",href:"/admin/users/create"}}/>
+{:else}
+    <Users {users} on:delete={deleteUser}/>
+    <Pagination basePath="/admin/users" morePages={users.length>=data.svelteCMS.appData.usersPerPage}/>
 {/if}
-<Pagination baseDir="users" itemsCount={data.count} page={data.page} itemsPerPage={data.itemsPerPage}/>

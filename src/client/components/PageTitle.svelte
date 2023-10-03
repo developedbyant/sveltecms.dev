@@ -8,7 +8,7 @@
     .title{
         font-size: 35px;
         font-weight: 800;
-        color: var(--headerColor);
+        color: var(--header-color);
         margin-bottom: 20px;
         text-transform: uppercase;
         margin-left: 20px;
@@ -20,7 +20,7 @@
         left: -20px;
         top: 50%;
         transform: translateY(-50%);
-        background-color: var(--mainColor);
+        background-color: var(--main-color);
         height: calc(100% - 10px);
         width: 6px;
         border-radius: 10px;

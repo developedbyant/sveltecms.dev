@@ -1,5 +1,5 @@
 <script lang="ts">
-    import macFolderIconSrc from "client/static/folder.ico"
+    import macFolderIconSrc from "client/assets/folder.ico"
     import { onMount } from "svelte";
     let data:HTMLDivElement
     onMount(()=>{

@@ -1,98 +1,102 @@
 <script lang="ts">
     export let data:PageData
-    import type { PageData } from "./$types"
-    import type { AssetData } from "cms/types";
-    import type { UpdateSettingFunc,UpdateUserFunc } from "cms/funcs"
-    import Utils from "cms/utils"
-    // packages
-    import { addToast } from "cms/packages/toasts"
-    // components
-    import MetaData from "cms/components/shared/MetaData.svelte"
-    import PageTitle from "cms/components/shared/PageTitle.svelte"
-    import Content from "cms/components/shared/layout/Content.svelte"
-    import LeftContent from "cms/components/shared/layout/LeftContent.svelte"
-    import RightContent from "cms/components/shared/layout/RightContent.svelte"
-    import Label from "cms/components/shared/Label.svelte"
-    import Button from "cms/components/shared/Button.svelte"
-    import FileExplorer from "cms/components/shared/fileExplorer/fileExplorer.svelte";
-    import ChangePassword from "./ChangePassword.svelte";
-    // elements
-    import ToggleSwitch from "cms/components/elements/ToggleSwitch.svelte"
-    import Input from "cms/components/elements/Input.svelte"
-    import InputNumber from "cms/components/elements/InputNumber.svelte"
-    import TextArea from "cms/components/elements/TextArea.svelte"
-    // icons
-    import CloudIcon from "cms/icons/Cloud.svelte"
-    import AssetViewer from "cms/components/shared/ViewAsset.svelte";
-    import LockIcon from "cms/icons/Lock.svelte";
+    import utils from "svelteCMS/lib/utils";
+    import { createToast } from "svelteCMS/components/toasts/store";
+    import PageTitle from "svelteCMS/components/shared/PageTitle.svelte";
+    import NoResult from "svelteCMS/components/shared/NoResult.svelte";
+    import AssetProviderCreate from "svelteCMS/components/shared/AssetProviderCreate.svelte";
+    import Label from "svelteCMS/components/shared/Label.svelte";
+    import AssetProviders from "svelteCMS/components/assetProviders/AssetProviders.svelte";
+    import ConfigForm from "./ConfigForm.svelte";
+    import type { PageData } from "./$types";
+    import type { ApiAssetProviderDelete, ApiSetAssetProvider, AssetProvidersNames,SettingsData,AssetProviders as AssetProvidersData,ApiAssetProviderSet, ApiSettingUpdate } from "svelteCMS/types";
+    let assetProviders = data.assetProviders
+    let userData = data.svelteCMS.userData
+    let deletingProvider:AssetProvidersNames|false = false
+    let settingProvider:AssetProvidersNames|"" = ""
+    // on adding provider
+    let isAddingNewAssetProvider:boolean = assetProviders.length===0
+    let addingProvider:boolean = false
+    // save app settings
+    let updatingApp:boolean = false
 
-    $: appData = data.appData
-    $: userData = data.userData
-    $: appSocialMedias = appData.site.socialMedias as any
-    let loading:boolean = false
-    let changingPass:boolean = false
-    let fileExplorerOpen:boolean = false
+    /** Open or close set asset provider */
+    const openNewAssetProvider = ()=> isAddingNewAssetProvider = true
 
-    /** Save changes */
-    async function saveChanges() {
-        loading = true
-        // save changes
-        const apiLoadData:UpdateSettingFunc['input'] = { name:"updateSettings",data:appData }
-        const apiResponse:UpdateSettingFunc['output'] = await Utils.fetch("/",apiLoadData)
-        await Utils.sleep(500) // wait 1 second
-        // show msg with response message
-        if(apiResponse.ok) addToast({ msg:apiResponse.msg,type:"ok" })
-        else addToast({ msg:apiResponse.msg,type:"error" })
-        await Utils.sleep(500) // wait 1 second
-        loading = false
+    /** Add new asset provider */
+    async function addProvider(e:any) {
+        const provider:AssetProvidersData = e.detail
+        const apiLoad:ApiSetAssetProvider['input'] = provider
+        const apiResponse:ApiSetAssetProvider['output'] = await utils.apiRequest("/admin/api/providers/create",apiLoad)
+        // wait 1 second to show message
+        await utils.wait(500)
+        // show api response
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })
+        // if provider was added, add it to current providers list
+        if(!apiResponse.error){
+            const newProvidersList = [...assetProviders,apiResponse.data.name]
+            assetProviders = [...newProvidersList]
+        }
+        // close adding new provider box
+        addingProvider = false
+        isAddingNewAssetProvider = false
     }
 
-    /** Update user */
-    async function updateImage(e:any) {
-        const asset:AssetData = e.detail
-        userData.image = asset
-        // update user
-        const apiLoad:UpdateUserFunc['input'] = { name:"updateUser",data:userData }
-        const apiResponse:UpdateUserFunc['output'] = await Utils.fetch("/",apiLoad)
-        // show msg with response message
-        if(apiResponse.ok) addToast({ msg:apiResponse.msg,type:"ok" })
-        else addToast({ msg:apiResponse.msg,type:"error" })
+    /** Delete asset provider */
+    async function deleteProvider(e:any) {
+        const provider:AssetProvidersNames = e.detail
+        deletingProvider = provider // set provider's name being deleted
+        const apiLoad:ApiAssetProviderDelete['input'] = { name:provider }
+        const apiResponse:ApiAssetProviderDelete['output'] = await utils.apiRequest("/admin/api/providers/delete",apiLoad)
+        // wait 1 second to show message
+        await utils.wait(500)
+        // show api response
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })
+        // if provider was deleted, remove it from current providers list
+        if(!apiResponse.error){
+            assetProviders = [...assetProviders.filter(data=>data!==provider)]
+        }
+        deletingProvider = false // remove provider's name being deleted
+    }
+
+    /** Start using provider */
+    async function setProvider(e:any){
+        const provider:AssetProvidersNames = e.detail
+        settingProvider = provider // set provider's name being setting
+        // send request
+        const apiLoad:ApiAssetProviderSet['input'] = { name:provider }
+        const apiResponse:ApiAssetProviderSet['output'] = await utils.apiRequest("/admin/api/providers/set",apiLoad)
+        // wait 1 second to show message
+        await utils.wait(500)
+        // show api response
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })
+        // if provider was set reload page
+        if(!apiResponse.error) location.reload()
+        settingProvider = "" // remove provider's name being setting
+    }
+
+    /** Save app settings */
+    async function saveDisplayConfig(e:any) {
+        updatingApp = true // set updatingApp to true
+        const displayConfig:SettingsData = e.detail
+        const validatorErrors = utils.validateInputs(displayConfig)
+        if(validatorErrors.length>0) createToast({ type:"error",msg:validatorErrors[0].message })
+        // update settings
+        const apiLoad:ApiSettingUpdate['input'] = displayConfig
+        const apiResponse:ApiSettingUpdate['output'] = await utils.apiRequest("/admin/api/app/update-settings",apiLoad)
+        // show response msg
+        await utils.wait(500)
+        createToast({ type:apiResponse.error?"error":"successful",msg:apiResponse.message })    
+        updatingApp = false // set updatingApp to false
     }
 </script>
 
-<MetaData title="Settings"/>
-<PageTitle title="Settings" link={{ href:"/logout",text:"Logout" }}/>
-<FileExplorer bind:open={fileExplorerOpen} on:selectAsset={updateImage}/>
-<ChangePassword bind:open={changingPass} />
-<Content>
-    <LeftContent>
-        <Label text="App name" />
-        <Input placeholder="App name..." bind:value={appData.site.name}/>
-        <Label text="Title" />
-        <Input placeholder="Site title..." bind:value={appData.site.title}/>
-        <Label text="Description" />
-        <TextArea placeholder="Site description..." bind:value={appData.site.description}/>
-        <Label text="Assets per pages" />
-        <InputNumber placeholder="Number of assets to show..." bind:value={appData.config.assetsPerPage}/>
-        <Label text="Users per pages" />
-        <InputNumber placeholder="Number of users to show..." bind:value={appData.config.usersPerPage}/>
-        <Label text="Routes per pages" />
-        <InputNumber placeholder="Number of routes to show..." bind:value={appData.config.routesPerPage}/>
-        <Label text="Objects per pages" />
-        <InputNumber placeholder="Number of objects to show..." bind:value={appData.config.objectsPerPage}/>
-    </LeftContent>
-    <RightContent>
-        <Label text="Update image"/>
-        <AssetViewer asset={userData.image} on:click={()=>fileExplorerOpen=!fileExplorerOpen}/>
-        {#each Object.entries(appData.site.socialMedias) as [mediaName]}
-            <Label text={mediaName} />
-            <Input placeholder="{mediaName}..." bind:value={appSocialMedias[mediaName]}/>
-        {/each}
-        <Label text="Change password" />
-        <Button text="Change" icon={LockIcon} on:click={()=>changingPass=true} bind:loading={changingPass}/>
-        <Label text="Allow users">
-            <ToggleSwitch bind:checked={appData.config.allowNewUser} />
-        </Label>
-        <Button text="Save changes" icon={CloudIcon} on:click={saveChanges} bind:loading/>
-    </RightContent>
-</Content>
+<AssetProviderCreate bind:loading={addingProvider} bind:open={isAddingNewAssetProvider} on:add={addProvider}/>
+<PageTitle showGoBack title="Hi {userData.firstName}" link={{ href:"/admin/auth/logout",text:"Logout",disableLoad:"yes"}}/>
+<ConfigForm bind:updatingApp on:saveDisplayConfig={saveDisplayConfig}/>
+<Label text="Asset providers" btn="Add new" on:click={openNewAssetProvider} margin="0"/>
+{#if assetProviders.length===0}
+    <NoResult title="No asset providers" subTitle="No asset providers were founded" link="Add one" on:click={openNewAssetProvider}/>
+{:else}
+    <AssetProviders on:delete={deleteProvider} on:setProvider={setProvider} {assetProviders} deleting={deletingProvider} setting={settingProvider} />
+{/if}

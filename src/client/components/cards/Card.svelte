@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { CardData } from "$types";
+    import type { CardData } from "client/types";
     export let data:CardData
 </script>
 
@@ -21,8 +21,8 @@
         width: calc(100% / 3 - 10px);
         border-radius: 5px;
         box-shadow: 1px 1px 4px rgba(0,0,0,.2);
-        background-color: var(--cardBg);
-        color: var(--cardColor);
+        background-color: var(--card-bg);
+        color: var(--card-text-color);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -36,13 +36,13 @@
     .title{
         font-size: 30px;
         font-weight: 800;
-        color: var(--headerColor);
+        color: var(--card-header-color);
         margin-bottom: 5px;
     }
     .desc{
         font-size: 14px;
         font-weight: 300;
-        color: var(--textColor);
+        color: var(--card-text-color);
         margin-bottom: 10px;
     }
     .btn{
@@ -51,8 +51,8 @@
         border-radius: 20px;
         font-size: 14px;
         font-weight: 300;
-        color: var(--buttonColor);
-        background-color: var(--buttonBg);
+        color: var(--button-color);
+        background-color: var(--button-bg);
         box-shadow: 1px 1px 4px rgba(0,0,0,.1);
     }
     .emoji{

@@ -1,14 +1,7 @@
-import db from "cms/lib/db.server"
-import { error } from "@sveltejs/kit"
-import type { RequestEvent } from "./$types"
-import type { RouteData } from "cms/types"
+import type { PageServerLoad } from "./$types"
 
-export const load = async(event:RequestEvent)=>{
-    const routeID = event.params.routeID.trim()
-    const routesCol = db.collection("_routes")
-    const route = await routesCol.findOne({ ID:routeID }) as RouteData | null
-    // if route was not founded
-    if(!route){ throw error(404,{ message:`Route ${routeID} not founded`}) }
-    // else return route data
-    return { route:{...route,_id:route['_id'].toString() } }
+/** RouteID is handle by +layout.server.ts, if we get here is because route exists */
+export const load:PageServerLoad = async(event)=> {
+    const parentData = await event.parent()
+    return { routeData:parentData.routeData }   
 }

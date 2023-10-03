@@ -1,24 +1,24 @@
 <script lang="ts">
     export let data:PageData
+    import PageTitle from "svelteCMS/components/shared/PageTitle.svelte";
+    import Stats from "svelteCMS/components/stats/Stats.svelte";
+    import Assets from "svelteCMS/components/assets/assets.svelte";
+    import NoResult from "svelteCMS/components/shared/NoResult.svelte";
     import type { PageData } from "./$types";
-    import PageTitle from "cms/components/shared/PageTitle.svelte";
-    import Stats from "cms/components/shared/stats/Stats.svelte";
-    import Assets from "cms/components/shared/assets/assets.svelte";
-    import Users from "cms/components/shared/users/users.svelte";
-    import Routes from "cms/components/shared/routes/Routes.svelte";
-    import MetaData from "cms/components/shared/MetaData.svelte";
-    $: stats = data.stats
+    const stats = [
+        {name:"Routes", count:data.stats.routes, href:"/admin/routes"},
+        {name:"Users", count:data.stats.users, href:"/admin/users"},
+        {name:"Assets", count:data.stats.assets, href:"/admin/assets"},
+    ]
     $: assets = data.assets
-    $: users = data.users
-    $: routes = data.routes
 </script>
 
-<MetaData />
-<PageTitle title="Site stats" />
+<PageTitle title="App stats" margin="15px 0 0 0"/>
 <Stats {stats}/>
-<PageTitle title="Latest routes" link={{ text:"View more",href:"/routes"}}/>
-<Routes {routes} showDel={false}/>
-<PageTitle title="Latest assets" link={{ text:"View more",href:"/assets"}}/>
-<Assets {assets}/>
-<PageTitle title="Latest users" link={{ text:"View more",href:"/users"}}/>
-<Users {users} showDel={false}/>
+<!-- assets -->
+{#if assets.length===0}
+    <NoResult title="No assets" subTitle="No assets were found, please add some" link={{ href:"/admin/assets",text:"Upload asset"}} />
+{:else}
+    <PageTitle title="Lasted assets" link={{ text:"View more",href:"/admin/assets"}} margin="15px 0 0 0"/>
+    <Assets {assets}/>
+{/if}

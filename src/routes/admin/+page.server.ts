@@ -1,35 +1,19 @@
-import db from "cms/lib/db.server"
-import handleSessions from "cms/custom/handleSessions.server"
-import { ObjectId } from "mongodb"
-import type { PageServerLoadEvent } from "./$types"
+import db from "svelteCMS/lib/db.server";
+import type { PageServerLoad } from "./$types"
+import type { AppCollectionNames } from "svelteCMS/types"
 
-export const load = async(event:PageServerLoadEvent)=>{
-    const appData = event.locals.appData
-    const cmsPath = appData.config.cmsPath
-    const assetsCol = db.collection("_assets")
-    const routesCol = db.collection("_routes")
-    const usersCol = db.collection("_users")
-
-    // Delete expired sessions
-    handleSessions(db)
-
-    // Get assets count
-    const assetsFilter = { _id:{$ne: new ObjectId("000000000000000000000000") } }
-    const assets = await assetsCol.find(assetsFilter).limit(6).sort("_id","desc").map((data:any)=>{ data['_id']=data['_id'].toString() ; return data }).toArray()
-    const assetsCount = await assetsCol.countDocuments(assetsFilter)
-
-    const routes = await routesCol.find({}).limit(3).sort("_id","desc").map((data:any)=>{ data['_id']=data['_id'].toString() ; return data }).toArray()
-    const routesCount = await routesCol.countDocuments()
-    
-    const usersFilter = { _id:{$ne: new ObjectId("000000000000000000000000") } }
-    const users = await usersCol.find(usersFilter).limit(6).sort("_id","desc").map((data:any)=>{ data['_id']=data['_id'].toString() ; return data }).toArray()
-    const usersCount = await usersCol.countDocuments(usersFilter)
-
-    // result
-    const stats = [
-        { name:"Routes", count:routesCount, href:`${cmsPath}/routes` },
-        { name:"Assets", count:assetsCount, href:`${cmsPath}/assets` },
-        { name:"Users", count:usersCount, href:`${cmsPath}/users` }
-    ]
-    return { stats,users,assets,routes }
+export const load:PageServerLoad = async(event)=> {
+    const colName:AppCollectionNames = "_Assets"
+    const assetsCol = db.collection(colName)
+    const assetsCursor = assetsCol.find().limit(15).map((data:any)=>{
+        data['_id'] = data['_id'].toString()
+        return data
+    }).limit(18)
+    const assets = await assetsCursor.toArray()
+    const stats = {
+        routes:await db.collection("_App").countDocuments({ key:"collection" }),
+        assets:await db.collection("_Assets").countDocuments(),
+        users:await db.collection("_Users").countDocuments(),
+    }
+    return { assets,stats }
 }
