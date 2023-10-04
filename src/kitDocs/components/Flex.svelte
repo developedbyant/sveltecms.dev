@@ -10,6 +10,7 @@
     .flex{
         margin-bottom: 15px;
         display: flex;
+        flex-wrap: wrap;
         gap: 10px;
     }
 </style>

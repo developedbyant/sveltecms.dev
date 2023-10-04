@@ -11,10 +11,9 @@
 
 {#if currentRoute && (prevLink||nextLink)}
     <ul class="links">
-        <div class="link">
-            <span class="title">Previous</span>
+        <div class="linkWrapper">
             {#if prevLink}
-                <a href={prevLink.href}>
+                <a href={prevLink.href} class="link">
                     <div class="icon">
                         <ArrowLeftIcon size="100%" />
                     </div>
@@ -22,10 +21,9 @@
                 </a>
             {/if}
         </div>
-        <div class="link">
-            <span class="title">Next</span>
+        <div class="linkWrapper">
             {#if nextLink}
-                <a href={nextLink.href}>
+                <a href={nextLink.href} class="link">
                     {nextLink.title}
                     <div class="icon">
                         <ArrowRightIcon size="100%" />
@@ -43,36 +41,32 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 10px;
+        padding: 10px 0;
     }
-    .link{
+    .linkWrapper{
         display: flex;
         flex-direction: column;
         gap: 5px;
         font-size: 18px;
         font-weight: 600;
     }
-    .title{
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--header-color);
-    }
-    .link a {
+    .link{
         text-decoration: none;
-        font-size: 15px;
+        font-size: 20px;
         font-weight: 500;
         display: flex;
         align-items: center;
         gap: 5px;
-        color: var(--text-color);
-    }
-    .link{
-        align-items: flex-end;
-    }
-    .link:nth-child(2){
-        align-items: flex-start;
+        color: var(--header-color);
+        background-color: var(--anti-app-bg);
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: 1.5px solid var(--border-color);
     }
     .icon{
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 30px;
         height: 30px;
         fill: var(--button-color);

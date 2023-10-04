@@ -1,8 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { page } from "$app/stores";
+    import { appStore } from "client/stores";
     import logoSrc from "kitDocs/assets/logo.png"
     import kitDocs from "kitDocs";
+    import Burger from "./Burger.svelte";
     // icons
     import MoonIcon from "kitDocs/icons/Moon.svelte"
     import SunIcon from "kitDocs/icons/Sun.svelte"
@@ -18,6 +20,9 @@
         theme = theme==="dark" ? "light" : "dark"
         dispatch("themeChange",theme)
     }
+
+    /** close nav when user click link*/
+    const closeNav = ()=> appStore.update(data=>{ data['navIsOpen']=false ; return data})
 </script>
 
 <header class="mainNavHeader">
@@ -25,28 +30,31 @@
         <a href="/" class="logo">
             <img src={logoSrc} alt="logo">
         </a>
-        <ul class="navLinks">
+        <ul class="navLinks" class:open={$appStore.navIsOpen}>
             {#each kitDocs.navLinks as navLink}
-                <li><a href={navLink.href} class="navLink" class:active={navLink.href===$page.url.pathname} target={navLink.external?"_blank":""}>
-                    {navLink.text}
-                </a></li>
+                <li class="navLink" class:active={navLink.href===$page.url.pathname || navLink.href.split("/")[1]===$page.url.pathname.split("/")[1]}>
+                    <a href={navLink.href} target={navLink.external?"_blank":""} on:click={closeNav}>
+                        {navLink.text}
+                    </a>
+                </li>
             {/each}
         </ul>
         <div class="search">
-            <div class="icon"><SearchIcon /></div>
+            <div class="icon"><SearchIcon size="100%"/></div>
             <input type="text" placeholder="search...">
         </div>
         <div class="rightMenu">
             {#if kitDocs.socialMedias.twitter}
-                <a href={kitDocs.socialMedias.twitter} target="_blank" class="iconBtn"><TwitterXIcon size=25/></a>
+                <a href={kitDocs.socialMedias.twitter} target="_blank" class="iconBtn pc"><TwitterXIcon size="100%"/></a>
             {/if}
             {#if kitDocs.socialMedias.github}
-            <a href={kitDocs.socialMedias.github} target="_blank" class="iconBtn"><GithubIcon size=25/></a>
+                <a href={kitDocs.socialMedias.github} target="_blank" class="iconBtn pc"><GithubIcon size="100%"/></a>
             {/if}
             <button class="iconBtn" on:click={setTheme}>
-                {#if theme==="dark"}<MoonIcon size=25/> {:else} <SunIcon size=25/>{/if}
+                {#if theme==="dark"}<MoonIcon size="100%"/> {:else} <SunIcon size="100%"/>{/if}
             </button>
         </div>
+        <Burger />
     </nav>
 </header>
 
@@ -56,6 +64,8 @@
         position: sticky;
         top: 0; left: 0;
         border-bottom: 1px solid var(--border-color);
+        position: relative;
+        z-index: 1;
     }
     .mainNav {
         display: flex;
@@ -79,6 +89,8 @@
         height: 40px;
     }
     .icon{
+        width: 20px;
+        height: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -99,6 +111,7 @@
         box-shadow: 0 0 1px 1px var(--border-color);
     }
     .search input,.search input::placeholder{
+        width: 100%;
         cursor: pointer;
         background-color: transparent;
         border: none;
@@ -114,7 +127,7 @@
         list-style: none;
         gap: 15px;
     }
-    .navLink{
+    .navLink a{
         text-decoration: none;
         font-size: 16px;
         font-weight: 500;
@@ -133,6 +146,8 @@
         padding-left: 20px;
     }
     .iconBtn{
+        width: 30px;
+        height: 30px;
         border: none;
         background-color: transparent;
         display: flex;
@@ -140,5 +155,38 @@
         justify-content: center;
         cursor: pointer;
         fill: var(--icon-color);
+    }
+    /* on mobile */
+    @media(max-width:700px){
+        .search{ flex: 1;}
+        .pc{ display: none; }
+        .navLinks{
+            position: absolute;
+            padding: 0 0 10px 0;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #1d2b41;
+            border-top: 1.5px solid var(--border-color);
+            border-radius: 0 0 20px 20px;
+            border-bottom: 2px solid var(--border-color);
+            transition: all ease-in-out 0.2s;
+            /* transition */
+            opacity: 0%;
+            transform: translateY(-30px);
+            pointer-events: none;
+        }
+        .navLinks.open{
+            opacity: 100%;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+        .navLink.active,.navLink:hover{
+            border-radius: 1px;
+            width: 100%;
+        }
     }
 </style>

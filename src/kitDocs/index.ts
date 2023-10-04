@@ -30,14 +30,10 @@ export default {
                     title:"Introduction",href:"/docs",
                     opPageLinks:[],
                 },
-                // {
-                //     title:"Install",href:"/docs/install",
-                //     opPageLinks:[],
-                // },
-                // {
-                //     title:"Update",href:"/docs/update",
-                //     opPageLinks:[],
-                // },
+                {
+                    title:"Update",href:"/docs/update",
+                    opPageLinks:[],
+                },
             ]
         },
         {

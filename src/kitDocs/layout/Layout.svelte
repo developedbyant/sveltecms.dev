@@ -93,4 +93,10 @@
     main{
         flex: 1;
     }
+    /* on mobile */
+    @media(max-width:700px){
+        .appContent{
+            flex-direction: column;
+        }
+    }
 </style>
