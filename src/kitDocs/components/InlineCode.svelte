@@ -8,8 +8,8 @@
     async function copyText(){
         copied = true
         await navigator.clipboard.writeText(code)
-        // Set button text back to copy after 2 seconds
-        setTimeout(()=>copied=false,1000)
+        // Set button text back to copy after 5 milliseconds
+        setTimeout(()=>copied=false,500)
     }
 </script>
 
@@ -22,7 +22,7 @@
 
 <style>
     code{
-        display: flex;
+        display: inline-flex;
         align-items: center;
         width: fit-content;
         gap: 5px;
@@ -32,7 +32,7 @@
         font-size: inherit;
         font-weight: 100;
         padding: 1px 6px;
-        border-radius: 20px;
+        border-radius: 5px;
     }
     button{
         all: unset;

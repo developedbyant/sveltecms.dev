@@ -1,26 +1,35 @@
 <script lang="ts">
     export let showSides:boolean = true
     export let data:PageData
-    import"../assets/global.css"
-    import"../assets/code.css"
+    import { afterNavigate } from "$app/navigation";
     import { page } from "$app/stores";
-    import { metaTagsStore } from "kitDocs";
-    import Nav from "./Nav.svelte";
-    import SideNav from "./SideNav.svelte";
-    import OnPageLinks from "./OnPageLinks.svelte";
-    import PageNav from "./PageNav.svelte";
+    import { appStore,metaTagsStore } from "kitDocs/stores";
+    import Nav from "./layout/Nav.svelte";
+    import SideNav from "./layout/SideNav.svelte";
+    import PageNav from "./layout/PageNav.svelte";
+    import Search from "./layout/Search.svelte";
     // images
-    import backdropImageSrc from "svelteCMS/images/backdrop.png"
-    import faviconImageSrc from "svelteCMS/images/favicon.png"
-    import type { PageData } from "../../../.svelte-kit/types/src/routes/$types"
-    let theme:"dark"|"light" = "dark"
+    // import backdropImageSrc from "svelteCMS/images/backdrop.png"
+    // import faviconImageSrc from "svelteCMS/images/favicon.png"
+    let backdropImageSrc = ""
+    let faviconImageSrc = ""
+    import type { PageData } from "../routes/$types"
+    $: theme = $appStore.theme
+    let appContentDiv:HTMLDivElement
+
+    /** scroll up after navigating */
+    afterNavigate(data=>{
+        if((data.from && data.to) && data.from.url.pathname!==data.to.url.pathname){
+            appContentDiv.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    })
 
     /** Change theme color */
     async function handleThemeChange(e:any) {
         const newTheme:"dark"|"light" = e.detail
-        theme = newTheme
+        appStore.update(data=>{ data['theme']=newTheme ; return data })
     }
-    $: console.log(data)
+    $: console.log(data,"src/kitDocs/layout/Layout.svelte")
     // set mete tags
     $: url = $page.url.href
     $: appName = $metaTagsStore.appName
@@ -51,9 +60,10 @@
     <meta property="twitter:image" content={image} />
 </svelte:head>
 
-<div class="kitdocs" class:light={theme==="light"}>
-    <Nav on:themeChange={handleThemeChange}/>
-    <div class="appContent">
+<div class="kitDocs kitBlocks" class:light={theme==="light"}>
+    <Search />
+    <Nav on:themeChange={handleThemeChange} {showSides}/>
+    <div class="appContent" bind:this={appContentDiv}>
         {#if showSides}
             <SideNav />
         {/if}
@@ -61,20 +71,19 @@
             <slot />
             <PageNav />
         </main>
-        {#if showSides}
-            <OnPageLinks />
-        {/if}
     </div>
 </div>
 
 <style>
-    .kitdocs{
+    .kitDocs{
+        scroll-behavior: smooth;
         display: flex;
         flex-direction: column;
         width: 100%;
         height: 100vh;
         overflow: hidden;
         background-color: var(--app-bg);
+        color: var(--text-color);
     }
     .appContent{
         flex: 1;
@@ -85,18 +94,18 @@
         margin: auto;
         gap: 50px;
         overflow-y: scroll;
-        padding: 10px 0;
+        padding: 10px 5px;
     }
     .appContent::-webkit-scrollbar{
         display: none;
     }
     main{
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: scroll;
     }
-    /* on mobile */
-    @media(max-width:700px){
-        .appContent{
-            flex-direction: column;
-        }
+    main::-webkit-scrollbar{
+        display: none;
     }
 </style>

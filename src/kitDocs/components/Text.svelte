@@ -7,9 +7,8 @@
         font-size: 15px;
         font-weight: 400;
         color: var(--text-color);
-        margin-bottom: 5px;
-        display: flex;
         gap: 5px;
+        margin-bottom: 5px;
     }
     /* Mobile Responsiveness */
     @media (max-width: 768px) {

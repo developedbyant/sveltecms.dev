@@ -1,52 +1,43 @@
 <script lang="ts">
-    export let code:string
-    export let lang:string
-    import hljs from "highlight.js/lib/common"
-    let btnText = "copy"
-    let htmlCode = hljs.highlight(code.trim(),{ language:lang||"js" }).value
-    /** Copy code to clipboard*/
-    async function copyToClipboard() {
-        btnText = "copied"
+    import ClipboardIcon from "kitDocs/icons/Clipboard.svelte"
+    import ClipboardFillIcon from "kitDocs/icons/ClipboardFill.svelte"
+    let button:HTMLButtonElement
+    let copied:boolean = false
+    /** Copy text to clipboard */
+    async function copyText(){
+        copied = true
+        const code = button.parentElement?.querySelector("code")?.innerText as string
         await navigator.clipboard.writeText(code)
-        // Set button text back to copy after 2 seconds
-        setTimeout(()=>btnText="Copy",2000)
+        // Set button text back to copy after 5 milliseconds
+        setTimeout(()=>copied=false,500)
     }
 </script>
 
-<pre>
-    <code class="language-{lang}">{@html htmlCode}</code>
-    <button class="copy" on:click={copyToClipboard}>{btnText}</button>
-</pre>
+<div class="code">
+    <button bind:this={button} on:click={copyText}>
+        {#if copied}<ClipboardFillIcon size=12/>{:else}<ClipboardIcon size=12/>{/if}
+    </button>
+    <slot />
+</div>
 
 <style>
-    pre{
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        background-color: var(--code-bg);
-        border-radius: 10px;
-        color: var(--code-text-color);
-        font-size: 14px;
-        font-weight: 400;
-        padding: 10px;
+    .code{
         position: relative;
-        margin-bottom: 10px;
+        margin: 5px 0;
     }
-    .copy{
-        border: none;
-        background-color: #333638;
-        color: white;
-        cursor: pointer; 
+    button{
+        all: unset;
+        cursor: pointer;
+        background-color: var(--app-bg);
+        padding: 5px 4px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
         position: absolute;
         top: 0;
         right: 0;
-        text-decoration: none;
-        padding: 3px 5px;
-        border-radius: 1px;
-        font-size: 10px;
-        font-weight: 300;
-        margin-bottom: 5px;
-        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        fill: var(--code-text-color);
     }
-    
 </style>

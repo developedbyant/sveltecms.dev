@@ -1,12 +1,13 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import kitDocs from "kitDocs";
+    import appData from "../../app.json"
     import ArrowLeftIcon from "kitDocs/icons/ArrowLeft.svelte";
     import ArrowRightIcon from "kitDocs/icons/ArrowRight.svelte";
-    $: currentRoute = kitDocs.routes.find(data=>data.links.find(link=>link.href===$page.url.pathname)) as typeof kitDocs.routes[0]
-    $: currLinkIndex = currentRoute ? currentRoute.links.findIndex(data=>data.href===$page.url.pathname) : 0
-    $: prevLink = currentRoute ? currentRoute.links[currLinkIndex-1] : undefined
-    $: nextLink = currentRoute ? currentRoute.links[currLinkIndex+1] : undefined
+    $: links = Object.values(appData.kitDocs).flatMap(data => data.map(item => ({ title: item.title, href: item.href })))
+    $: currentRoute = links.find(link=>link.href===$page.url.pathname)
+    $: currLinkIndex = currentRoute ? links.findIndex(data=>data.href===currentRoute?.href) : 0
+    $: prevLink = links.length>0 ? links[currLinkIndex-1] : undefined
+    $: nextLink = links.length>0 ? links[currLinkIndex+1] : undefined
 </script>
 
 {#if currentRoute && (prevLink||nextLink)}
@@ -58,7 +59,7 @@
         align-items: center;
         gap: 5px;
         color: var(--header-color);
-        background-color: var(--anti-app-bg);
+        background-color: var(--app-fb);
         padding: 5px 10px;
         border-radius: 5px;
         border: 1.5px solid var(--border-color);

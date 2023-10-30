@@ -1,0 +1,55 @@
+{
+    "navLinks": [
+        {
+            "text": "Home",
+            "href": "/",
+            "external": false
+        },
+        {
+            "text": "Documentation",
+            "href": "/docs",
+            "external": false
+        },
+        {
+            "text": "Demo",
+            "href": "/admin",
+            "external": true
+        },
+        {
+            "text": "Svelte",
+            "href": "https://kit.svelte.dev/",
+            "external": true
+        }
+    ],
+    "socialMedias": {
+        "twitter": "https://twitter.com/svelteCMS",
+        "github": "https://github.com/svelteCMS"
+    },
+    "kitDocs": {
+        "Introduction": [
+            {
+                "title": "Introduction",
+                "href": "/docs",
+                "description": "Welcome to kitDocs learn how to install,update,handle layout,add alias and more."
+            }
+        ],
+        "Core": [
+            {
+                "title": "Assets",
+                "href": "/docs/assets",
+                "description": "create,add,delete assets."
+            },
+            {
+                "title": "Types",
+                "href": "/docs/types",
+                "description": "Generated types by svelteCMS,."
+            },
+            {
+                "title": "Database",
+                "href": "/docs/database",
+                "description": "Database utils file to create,update and delete from your db."
+            }
+        ]
+    },
+    "version": "0.0.7"
+}

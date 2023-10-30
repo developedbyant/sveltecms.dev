@@ -20,24 +20,22 @@
 <style>
     .header{
         color: var(--header-color);
-        /* margin-bottom: 10px; */
-        margin-top: 20px;
     }
     h1{
-        font-size: 40px;
-        font-weight: 800;
+        font-size: 30px;
+        font-weight: 400;
     }
     h2{
-        font-size: 30px;
-        font-weight: 800;
+        font-size: 25px;
+        font-weight: 400;
     }
     h3{
         font-size: 20px;
-        font-weight: 700;
+        font-weight: 400;
     }
     h4,h5{
         font-size: 20px;
-        font-weight: 600;
+        font-weight: 400;
     }
     /* Mobile Responsiveness */
     @media (max-width: 768px) {

@@ -1,25 +1,31 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import kitDocs from "kitDocs";
-    // $: currentRoute = kitDocs.routes.find(data=>data.pathname===$page.url.pathname) as typeof kitDocs.routes[0]
+    import { appStore } from "kitDocs/stores";
+    import appData from "../../app.json"
+    const capitalize = (data:string) => data.charAt(0).toUpperCase()+data.slice(1)
+
+    /** Close side nav on mobile */
+    const closeSideNav = (e:any)=>{
+        if(e.target.classList) appStore.update(data=>{ data['sideNavIsOpen']=false ; return data})
+    }
+
+    $: open = $appStore.sideNavIsOpen
 </script>
 
-<!-- {#if currentRoute} -->
-    <aside>
-        <ul class="links">
-            {#each kitDocs.routes as route}
-            <div class="linkWrap">
-                <span class="title">{route.title}</span>
-                <ul class="subLinks">
-                    {#each route.links as link}
-                        <li><a href={link.href} class="subLink" class:active={link.href===$page.url.pathname}>{link.title}</a></li>
-                    {/each}
-                </ul>
-            </div>
-            {/each}
-        </ul>
-    </aside>
-<!-- {/if} -->
+<aside class="sideNav" class:open on:click={closeSideNav} role="none">
+    <ul class="links">
+        {#each Object.entries(appData.kitDocs) as [title,links]}
+        <div class="linkWrap">
+            <span class="title">{capitalize(title)}</span>
+            <ul class="subLinks">
+                {#each links as link}
+                    <li><a href={link.href} class="subLink" class:active={link.href===$page.url.pathname}>{capitalize(link.title)}</a></li>
+                {/each}
+            </ul>
+        </div>
+        {/each}
+    </ul>
+</aside>
 
 <style>
     aside{
@@ -27,6 +33,7 @@
         left: 0;
         top: 0;
         overflow-y: scroll;
+        min-width: fit-content;
     }
     aside::-webkit-scrollbar{
         display: none;
@@ -59,6 +66,7 @@
         border-radius: 10px;
     }
     .subLinks{
+        list-style: none;
         padding-left: 10px;
         display: flex;
         flex-direction: column;
@@ -78,5 +86,37 @@
     }
     .subLink.active{
         color: var(--main-color);
+    }
+    /* on mobile */
+    @media(max-width:700px){
+        aside{
+            position: fixed;
+            top: 0;
+            z-index: 10;
+            background-color: rgba(0,0,0,20%);
+            width: 100%;
+            height: 100vh;
+            /* transition */
+            transition: all ease-in-out 0.5s;
+            display: none;
+            opacity: 0%;
+        }
+        .links{
+            padding: 15px;
+            background-color: var(--app-bg);
+            width: fit-content;
+            height: 100vh;
+            border-right: 1.5px solid var(--border-color);
+            /* transition */
+            transition: all ease-in-out 0.5s;
+            transform: translateX(-100%);
+        }
+        aside.open{
+            display: flex;
+            opacity: 100%;
+        }
+        aside.open > .links{
+            transform: translateX(0);
+        }
     }
 </style>
