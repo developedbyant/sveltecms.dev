@@ -1,7 +1,9 @@
 <script lang="ts">
     export let data
     import { page } from "$app/stores";
-    import"kitDocs/style.css"
+    import"../app.css"
+    import"kitDocs/styles/app.css"
+    import"kitDocs/styles/shiki.css"
     import Layout from "kitDocs/Layout.svelte";
     $: showSides = $page.url.pathname.startsWith("/docs")
 </script>
